@@ -5,8 +5,8 @@ export type Task = {
 };
 
 const tasks: Task[] = [
-  { id: 1, title: "Write docs", completed: false },
-  { id: 2, title: "Ship release", completed: true }
+  { id: 1, title: 'Write docs', completed: false },
+  { id: 2, title: 'Ship release', completed: true },
 ];
 
 let nextId = tasks.length + 1;
@@ -19,11 +19,11 @@ export function getTask(id: number): Task | undefined {
   return tasks.find((task) => task.id === id);
 }
 
-export function createTask(data: Pick<Task, "title" | "completed">): Task {
+export function createTask(data: Pick<Task, 'title' | 'completed'>): Task {
   const newTask: Task = {
     id: nextId++,
     title: data.title,
-    completed: Boolean(data.completed)
+    completed: Boolean(data.completed),
   };
   tasks.push(newTask);
   return newTask;
