@@ -22,13 +22,16 @@ The API exposes:
 
 ## Testing
 
-`npm test` runs Jest + Supertest directly against the TypeScript sources. The `unit-test.yaml` workflow runs the same suite on every push/PR targeting `main`, `develop`, or `feature/*`.
+`npm test` runs Jest + Supertest directly against the TypeScript sources. The CI workflow now lints (`npm run lint`), enforces formatting (`npm run format:check`), and runs the test + build steps on every push targeting `main`, `master`, `develop`, or `release/*`.
 
 ## Docker & deployment
 
 - `Dockerfile` builds the production image and accepts `RELEASE_VERSION` (set in CI).
 - `Dockerfile-Local` + `docker-compose.yml` power local live reload development.
-- `.github/workflows/ci.yaml` installs deps, runs tests, and pushes the container to GHCR (`ghcr.io/<org>/<repo>`). Tags include the commit SHA, the Git ref (e.g., `v1.2.3`), and `latest`.
+- `.github/workflows/ci.yaml` includes two jobs:
+  - **Unit Tests**: installs deps, runs lint/format checks, executes Jest, and compiles TypeScript.
+  - **Build and Publish Image**: depends on tests, builds the Docker image, pushes it to GHCR, and runs Trivy OS/library scans with fail-fast behavior (controlled by `TRIVY_EXIT_CODE`).
+- Branch protection: require both jobs to pass on the `master` branch before merging or tagging releases. (Set up in GitHub → Settings → Branches → `master`.)
 
 ## Helm promotion flow
 
