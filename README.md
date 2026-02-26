@@ -22,7 +22,7 @@ The API exposes:
 
 ## Testing
 
-`npm test` runs Jest + Supertest directly against the TypeScript sources. The CI workflow now lints (`npm run lint`), enforces formatting (`npm run format:check`), and runs the test + build steps on every push targeting `main`, `master`, `develop`, or `release/*`.
+`npm test` runs Jest + Supertest directly against the TypeScript sources. The CI workflow now lints (`npm run lint`), enforces formatting (`npm run format:check`), and runs the test + build steps on every push targeting `master`, `develop`, or `release/*`.
 
 ## Docker & deployment
 
@@ -33,12 +33,20 @@ The API exposes:
   - **Build and Publish Image**: depends on tests, builds the Docker image, pushes it to GHCR, and runs Trivy OS/library scans with fail-fast behavior (controlled by `TRIVY_EXIT_CODE`).
 - Branch protection: require both jobs to pass on the `master` branch before merging or tagging releases. (Set up in GitHub → Settings → Branches → `master`.)
 
-## Helm promotion flow
+## Release flow
 
-The `helm-charts/app/values.yaml` file mirrors the prod-cluster values you described:
+When you’re ready to ship a change from `master`, use this checklist:
 
-1. Create a release tag (e.g., `v1.2.3`). GitHub Actions builds/pushes `ghcr.io/<org>/<repo>:v1.2.3`.
-2. In your infra repo, bump `image.tag` inside `helm-charts/app/values.yaml` (or copy this file there) to the new tag.
-3. Apply the chart via your preferred GitOps/Helm tooling. The deployment template pulls the new image and keeps the health probes/resources consistent with the values file.
-
-Feel free to extend the chart with ingress rules, cronjobs, or secrets lists to match your production setup—the scaffolding here mirrors the structure you shared.
+1. **Tag the app repo**
+   ```bash
+   git checkout master
+   git pull origin master
+   npm test && npm run lint && npm run build   # optional local safety check
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+   The CI workflow triggered by the `v0.1.0` tag publishes `ghcr.io/<org>/<repo>:v0.1.0` (plus the usual SHA/latest tags) and runs Trivy scans.
+2. **Promote via the infra repo**
+   - In the prod-cluster repo, update `helm-charts/app/values.yaml` so `image.tag` matches the new version (e.g., `"v0.1.0"`).
+   - Commit, open a PR, and merge into that repo’s deployment branch.
+   - Your Helm/GitOps pipeline will reconcile and pull the freshly tagged image automatically.
