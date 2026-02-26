@@ -1,6 +1,8 @@
 ARG RELEASE_VERSION
 FROM node:20-alpine AS build
 
+RUN npm install -g npm@latest
+
 WORKDIR /app
 
 COPY package*.json tsconfig.json .
@@ -10,6 +12,8 @@ COPY src ./src
 RUN npm run build
 
 FROM node:20-alpine AS runtime
+
+RUN npm install -g npm@latest
 
 ENV NODE_ENV=production \
     RELEASE_VERSION=${RELEASE_VERSION}
